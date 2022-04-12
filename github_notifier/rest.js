@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 const {
     Octokit
 } = require("@octokit/rest");
+var assert = require('assert');
 
 var SlackBot = require('slackbots');
 
@@ -35,17 +36,22 @@ const octokit = new Octokit({
 // every hour run the job
 setInterval(myTimer, 3 * 1000);
 
-function myTimer() {
+function main() {
     const last_update_ago = [];
     promises = makePromises(last_update_ago);
     Promise.all(promises).then(() => {
         sort_log_updates(last_update_ago);
-        console.log('ran again');
-    });
+        const min_updated = updated_for_today(last_update_ago);
+        const msg = `updated_for_today: ${min_updated}`;
 
-    const min_updated = updated_for_today(last_update_ago);
-    const msg = `updated_for_today: ${min_updated}`;
-    bot.postMessageToChannel('notifications', msg);
+        // send notification to slack bot
+        bot.postMessageToChannel('notifications', msg);
+    });
+};
+
+function myTimer() {
+    main()
+
     console.log('ran myTimer')
 }
 
@@ -66,9 +72,11 @@ const sort_log_updates = (last_update_ago, ndisplay = 5) => {
 const updated_for_today = (last_update_ago) => {
 
     updated_agos = last_update_ago.map(x => x.updated_ago_hours);
+    assert(last_update_ago.length > 0);
     console.log(`updated_agos: ${JSON.stringify(updated_agos)}`);
     min_updated = Math.min(...updated_agos);
     console.log(`min_updated: ${min_updated}`);
+    console.log('--------------------------------------------');
 
     return min_updated;
 };
@@ -123,19 +131,4 @@ const makePromises = (last_update_ago) => {
     return promises;
 }
 
-const last_update_ago = [];
-promises = makePromises(last_update_ago);
-Promise.all(promises).then(() => {
-    sort_log_updates(last_update_ago);
-
-    console.log(`last_update_ago.len: ${Object.keys(last_update_ago).length}`);
-
-    // const repo = last_update_ago[0];
-    // console.log(`${repo}: ${JSON.stringify(last_update_ago[repo])}`);
-
-    const min_updated = updated_for_today(last_update_ago);
-    const msg = `updated_for_today: ${min_updated}`;
-
-    // send notification to slack bot
-    bot.postMessageToChannel('notifications', msg);
-});
+main();
