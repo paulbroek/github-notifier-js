@@ -81,11 +81,11 @@ const log_repo_names = function(data, last_update_ago) {
     // handle data
     // console.log(`some data: ${JSON.stringify(data)}`);
     console.log(`len data: ${data.length}`);
-    console.log(`data[0].keys: ${Object.keys(data[0])}`);
-    console.log(`data[0].name: ${data[0].name}`);
-    console.log(`data[0].pushed_at: ${data[0].pushed_at}`);
+    // console.log(`data[0].keys: ${Object.keys(data[0])}`);
+    // console.log(`data[0].name: ${data[0].name}`);
+    // console.log(`data[0].pushed_at: ${data[0].pushed_at}`);
     data.forEach(el => {
-        console.log(`el.name=${el.name}`)
+        // console.log(`el.name=${el.name}`)
         const updated_ago = now - new Date(el.pushed_at);
         last_update_ago.push({
             'name': el.name,
@@ -96,7 +96,7 @@ const log_repo_names = function(data, last_update_ago) {
     })
 };
 
-console.log(`octokit.rest.repos keys: ${Object.keys(octokit.rest.repos)}`);
+// console.log(`octokit.rest.repos keys: ${Object.keys(octokit.rest.repos)}`);
 const makePromises = (last_update_ago) => {
     const promises = [];
     promises[0] =
@@ -133,9 +133,8 @@ Promise.all(promises).then(() => {
     // console.log(`promises resolved`);
     console.log(`last_update_ago.len: ${Object.keys(last_update_ago).length}`);
 
-    const repo = last_update_ago[0];
-
-    console.log(`${repo}: ${JSON.stringify(last_update_ago[repo])}`);
+    // const repo = last_update_ago[0];
+    // console.log(`${repo}: ${JSON.stringify(last_update_ago[repo])}`);
 
     min_updated = updated_for_today(last_update_ago);
     const msg = `updated_for_today: ${min_updated}`;
