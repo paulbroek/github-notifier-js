@@ -1,8 +1,11 @@
 {
   "dependencies": {
     "@octokit/rest": "^18.12.0",
-    "assert": "^2.0.0",
     "dotenv": "^16.0.0",
     "slackbots": "^1.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.13.0",
+    "eslint-config-google": "^0.14.0"
   }
 }
