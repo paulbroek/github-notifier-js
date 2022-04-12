@@ -11,7 +11,7 @@ dotenv.config();
 const slack_token = process.env.SLACK_TOKEN;
 const github_auth = process.env.GITHUB_TOKEN;
 
-// create a bot
+// create a Slack bot
 var bot = new SlackBot({
     token: slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token 
     name: 'Trading'
@@ -43,14 +43,13 @@ function myTimer() {
         console.log('ran again');
     });
 
-    min_updated = updated_for_today(last_update_ago);
+    const min_updated = updated_for_today(last_update_ago);
     const msg = `updated_for_today: ${min_updated}`;
     bot.postMessageToChannel('notifications', msg);
     console.log('ran myTimer')
 }
 
 // save last update in seconds by repository name (both private and public, those are separate API calls)
-
 const sort_log_updates = (last_update_ago, ndisplay = 5) => {
 
     // sort by updated_ago
@@ -76,14 +75,14 @@ const updated_for_today = (last_update_ago) => {
 
 const log_repo_names = function(data, last_update_ago) {
     const now = new Date();
-    // const now_ts = Date.parse(now);
 
-    // handle data
     // console.log(`some data: ${JSON.stringify(data)}`);
-    console.log(`len data: ${data.length}`);
     // console.log(`data[0].keys: ${Object.keys(data[0])}`);
     // console.log(`data[0].name: ${data[0].name}`);
     // console.log(`data[0].pushed_at: ${data[0].pushed_at}`);
+
+    // handle data
+    console.log(`len data: ${data.length}`);
     data.forEach(el => {
         // console.log(`el.name=${el.name}`)
         const updated_ago = now - new Date(el.pushed_at);
@@ -124,19 +123,19 @@ const makePromises = (last_update_ago) => {
     return promises;
 }
 
-// Promise.all([getPublicRepos()]).then(() => {
 const last_update_ago = [];
 promises = makePromises(last_update_ago);
 Promise.all(promises).then(() => {
     sort_log_updates(last_update_ago);
 
-    // console.log(`promises resolved`);
     console.log(`last_update_ago.len: ${Object.keys(last_update_ago).length}`);
 
     // const repo = last_update_ago[0];
     // console.log(`${repo}: ${JSON.stringify(last_update_ago[repo])}`);
 
-    min_updated = updated_for_today(last_update_ago);
+    const min_updated = updated_for_today(last_update_ago);
     const msg = `updated_for_today: ${min_updated}`;
+
+    // send notification to slack bot
     bot.postMessageToChannel('notifications', msg);
 });
