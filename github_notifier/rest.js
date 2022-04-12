@@ -13,6 +13,9 @@ dotenv.config();
 const slack_token = process.env.SLACK_TOKEN;
 const github_auth = process.env.GITHUB_TOKEN;
 const MIN_PREC = 3;
+const ALERT_FROM_HOUR = 21;
+const RUN_EVERY_HOURS = 5;
+const RUN_EVERY_SECS = 3600 * RUN_EVERY_HOURS;
 const hostname = os.hostname();
 
 // create a Slack bot
@@ -38,7 +41,7 @@ const octokit = new Octokit({
 });
 
 // every hour run the job
-setInterval(myTimer, 3 * 1000);
+setInterval(myTimer, RUN_EVERY_SECS * 1000);
 
 function main() {
   const last_update_ago = [];
@@ -46,10 +49,15 @@ function main() {
   Promise.all(promises).then(() => {
     sortLogUpdates(last_update_ago);
     const min_updated = updatedForToday(last_update_ago);
-    const msg = `updatedForToday: ${min_updated.toFixed(MIN_PREC)}`;
+    // const msg = `updatedForToday: ${res}`;
+    const now = new Date();
+    const threshold_cond = now.getHours() >= ALERT_FROM_HOUR && min_updated > ALERT_FROM_HOUR;
+    const notification = `You didn't commit for today. You have 3 hours to do so. ${min_updated.toFixed(MIN_PREC)}`;
 
     // send notification to slack bot
-    bot.postMessageToChannel('notifications', msg);
+    if (threshold_cond) {
+      bot.postMessageToChannel('notifications', notification);
+    }
   });
 };
 
@@ -79,7 +87,10 @@ const updatedForToday = (last_update_ago) => {
   assert(last_update_ago.length > 0);
   console.log(`updated_agos: ${JSON.stringify(updated_agos)}`);
   min_updated = Math.min(...updated_agos);
-  console.log(`min_updated: ${min_updated.toFixed(MIN_PREC)}`);
+  const base_msg = `min_updated: ${min_updated.toFixed(MIN_PREC)} `;
+  const cond = min_updated < ALERT_FROM_HOUR;
+  const msg = base_msg + (cond ? 'you commited for today' : "you didn't commit for today");
+  console.log(msg);
   console.log('--------------------------------------------');
 
   return min_updated;
