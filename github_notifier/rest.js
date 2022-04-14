@@ -31,7 +31,6 @@ bot.on('start', function() {
   };
 
   // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
-  // console.log(`send message to slack`);
   const msg = `new session, connected from: ${hostname}`;
   bot.postMessageToChannel('notifications', msg, params);
 });
@@ -49,10 +48,9 @@ function main() {
   Promise.all(promises).then(() => {
     sortLogUpdates(last_update_ago);
     const min_updated = updatedForToday(last_update_ago);
-    // const msg = `updatedForToday: ${res}`;
     const now = new Date();
     const threshold_cond = now.getHours() >= ALERT_FROM_HOUR && min_updated > ALERT_FROM_HOUR;
-    const notification = `You didn't commit for today. You have 3 hours to do so. ${min_updated.toFixed(MIN_PREC)}`;
+    const notification = `You didn't commit for today. You have 3 hours to do so. \n (last commit was ~${min_updated.toFixed(MIN_PREC)} hours ago)`;
 
     // send notification to slack bot
     if (threshold_cond) {
