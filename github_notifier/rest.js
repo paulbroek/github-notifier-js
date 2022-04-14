@@ -1,13 +1,11 @@
-const os = require('os');
-const assert = require('assert');
-const dotenv = require('dotenv');
-const {
-  Octokit,
-} = require('@octokit/rest');
+const os = require("os");
+const assert = require("assert");
+const dotenv = require("dotenv");
+const { Octokit } = require("@octokit/rest");
 
-const SlackBot = require('slackbots');
+const SlackBot = require("slackbots");
 
-// move tokens to .env
+// load .env variables
 dotenv.config();
 
 const slack_token = process.env.SLACK_TOKEN;
@@ -20,26 +18,26 @@ const hostname = os.hostname();
 
 // create a Slack bot
 const bot = new SlackBot({
-  token: slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token 
-  name: 'Trading'
+  token: slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token
+  name: "Trading",
 });
 
-bot.on('start', function() {
+bot.on("start", function () {
   // more information about additional params https://api.slack.com/methods/chat.postMessage
   const params = {
-    icon_emoji: ':cat:',
+    icon_emoji: ":cat:",
   };
 
-  // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
+  // define channel, where bot exist. You can adjust it there https://my.slack.com/services
   const msg = `new session, connected from: ${hostname}`;
-  bot.postMessageToChannel('notifications', msg, params);
+  bot.postMessageToChannel("notifications", msg, params);
 });
 
 const octokit = new Octokit({
-  auth: github_auth
+  auth: github_auth,
 });
 
-// every hour run the job
+// every X seconds, run the job
 setInterval(myTimer, RUN_EVERY_SECS * 1000);
 
 function main() {
@@ -49,52 +47,62 @@ function main() {
     sortLogUpdates(last_update_ago);
     const min_updated = updatedForToday(last_update_ago);
     const now = new Date();
-    const threshold_cond = now.getHours() >= ALERT_FROM_HOUR && min_updated > ALERT_FROM_HOUR;
-    const notification = `You didn't commit for today. You have 3 hours to do so. \n (last commit was ~${min_updated.toFixed(MIN_PREC)} hours ago)`;
+    const threshold_cond =
+      now.getHours() >= ALERT_FROM_HOUR && min_updated > ALERT_FROM_HOUR;
+    const notification = `You didn't commit for today. You have 3 hours to do so. \n (last commit was ~${min_updated.toFixed(
+      MIN_PREC
+    )} hours ago)`;
 
     // send notification to slack bot
     if (threshold_cond) {
-      bot.postMessageToChannel('notifications', notification);
+      bot.postMessageToChannel("notifications", notification);
     }
   });
-};
+}
 
 function myTimer() {
-  main()
+  main();
 
-  console.log('ran myTimer')
+  // console.log('ran myTimer')
 }
 
 // save last update in seconds by repository name (both private and public, those are separate API calls)
 const sortLogUpdates = (last_update_ago, ndisplay = 5) => {
-
   // sort by updated_ago
   last_update_ago.sort((a, b) => a.updated_ago - b.updated_ago);
 
-  console.log(`last_update_ago: ${JSON.stringify(last_update_ago.slice(0, ndisplay), null, '\t')}`);
+  console.log(
+    `last_update_ago: ${JSON.stringify(
+      last_update_ago.slice(0, ndisplay),
+      null,
+      "\t"
+    )}`
+  );
   console.log(`last_update_ago.length: ${last_update_ago.length}`);
 
-  const repoNames = last_update_ago.map(x => x.name);
-  const sortedRepoNames = repoNames.map(name => name.toLowerCase());
+  const repoNames = last_update_ago.map((x) => x.name);
+  const sortedRepoNames = repoNames.map((name) => name.toLowerCase());
   sortedRepoNames.sort();
   console.log(`last_update_ago.keys: ${sortedRepoNames}`);
-}
-const updatedForToday = (last_update_ago) => {
+};
 
-  updated_agos = last_update_ago.map(x => x.updated_ago_hours);
+const updatedForToday = (last_update_ago) => {
+  updated_agos = last_update_ago.map((x) => x.updated_ago_hours);
   assert(last_update_ago.length > 0);
   console.log(`updated_agos: ${JSON.stringify(updated_agos)}`);
   min_updated = Math.min(...updated_agos);
   const base_msg = `min_updated: ${min_updated.toFixed(MIN_PREC)} `;
   const cond = min_updated < ALERT_FROM_HOUR;
-  const msg = base_msg + (cond ? 'you commited for today' : "you didn't commit for today");
+  const msg =
+    base_msg +
+    (cond ? "you commited for today" : "you didn't commit for today");
   console.log(msg);
-  console.log('--------------------------------------------');
+  console.log("--------------------------------------------");
 
   return min_updated;
 };
 
-const logRepoNames = function(data, last_update_ago) {
+const logRepoNames = function (data, last_update_ago) {
   const now = new Date();
 
   // console.log(`some data: ${JSON.stringify(data)}`);
@@ -104,44 +112,38 @@ const logRepoNames = function(data, last_update_ago) {
 
   // handle data
   console.log(`len data: ${data.length}`);
-  data.forEach(el => {
-    // console.log(`el.name=${el.name}`)
+  data.forEach((el) => {
+    // console.log(`el.name=${el.name}`);
     const updated_ago = now - new Date(el.pushed_at);
     last_update_ago.push({
-      'name': el.name,
-      'updated_at': el.pushed_at,
-      'updated_ago': updated_ago,
-      'updated_ago_hours': updated_ago / (1000 * 3600)
+      name: el.name,
+      updated_at: el.pushed_at,
+      updated_ago: updated_ago,
+      updated_ago_hours: updated_ago / (1000 * 3600),
     });
-  })
+  });
 };
 
 // console.log(`octokit.rest.repos keys: ${Object.keys(octokit.rest.repos)}`);
 const makePromises = (last_update_ago) => {
   const promises = [];
-  promises[0] =
-    octokit.rest.repos
+  promises[0] = octokit.rest.repos
     .listForAuthenticatedUser({
       username: "paulbroek",
     })
-    .then(({
-      data
-    }) => {
-      logRepoNames(data, last_update_ago)
+    .then(({ data }) => {
+      logRepoNames(data, last_update_ago);
     });
 
-  promises[1] =
-    octokit.rest.repos
+  promises[1] = octokit.rest.repos
     .listForUser({
       username: "paulbroek",
     })
-    .then(({
-      data
-    }) => {
-      logRepoNames(data, last_update_ago)
-    })
+    .then(({ data }) => {
+      logRepoNames(data, last_update_ago);
+    });
 
   return promises;
-}
+};
 
 main();
