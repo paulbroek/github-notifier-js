@@ -19,7 +19,7 @@ const config = {
 const RUN_EVERY_SECS = 3600 * config.RUN_EVERY_HOURS;
 const hostname = os.hostname();
 
-console.log(`config=${config}`);
+console.log(`config=${JSON.stringify(config)}`);
 
 // create a Slack bot
 const bot = new SlackBot({
