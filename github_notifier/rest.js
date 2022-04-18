@@ -11,7 +11,7 @@ dotenv.config();
 const slack_token = process.env.SLACK_TOKEN;
 const github_auth = process.env.GITHUB_TOKEN;
 const MIN_PREC = 3;
-const ALERT_FROM_HOUR = 21;
+const ALERT_FROM_HOUR = 20;
 const RUN_EVERY_HOURS = 5;
 const RUN_EVERY_SECS = 3600 * RUN_EVERY_HOURS;
 const hostname = os.hostname();
