@@ -11,10 +11,15 @@ dotenv.config();
 const slack_token = process.env.SLACK_TOKEN;
 const github_auth = process.env.GITHUB_TOKEN;
 const MIN_PREC = 3;
-const ALERT_FROM_HOUR = 20;
-const RUN_EVERY_HOURS = 5;
-const RUN_EVERY_SECS = 3600 * RUN_EVERY_HOURS;
+const config = {
+  ALERT_FROM_HOUR: 20,
+  RUN_EVERY_HOURS: 5,
+};
+
+const RUN_EVERY_SECS = 3600 * config.RUN_EVERY_HOURS;
 const hostname = os.hostname();
+
+console.log(`config=${config}`);
 
 // create a Slack bot
 const bot = new SlackBot({
@@ -48,7 +53,8 @@ function main() {
     const min_updated = updatedForToday(last_update_ago);
     const now = new Date();
     const threshold_cond =
-      now.getHours() >= ALERT_FROM_HOUR && min_updated > ALERT_FROM_HOUR;
+      now.getHours() >= config.ALERT_FROM_HOUR &&
+      min_updated > config.ALERT_FROM_HOUR;
     const notification = `You didn't commit for today. You have 3 hours to do so. \n (last commit was ~${min_updated.toFixed(
       MIN_PREC
     )} hours ago)`;
@@ -92,7 +98,7 @@ const updatedForToday = (last_update_ago) => {
   console.log(`updated_agos: ${JSON.stringify(updated_agos)}`);
   min_updated = Math.min(...updated_agos);
   const base_msg = `min_updated: ${min_updated.toFixed(MIN_PREC)} `;
-  const cond = min_updated < ALERT_FROM_HOUR;
+  const cond = min_updated < config.ALERT_FROM_HOUR;
   const msg =
     base_msg +
     (cond ? "you commited for today" : "you didn't commit for today");
