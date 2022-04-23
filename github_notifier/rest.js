@@ -6,7 +6,7 @@ const { Octokit } = require("@octokit/rest");
 
 const SlackBot = require("slackbots");
 
-// load .env variables
+// load .env vars
 dotenv.config();
 
 const slack_token = process.env.SLACK_TOKEN;
@@ -43,7 +43,7 @@ const octokit = new Octokit({
   auth: github_auth,
 });
 
-// every X seconds, run the job
+// run the job periodically
 setInterval(myTimer, RUN_EVERY_SECS * 1000);
 
 function main() {
@@ -69,8 +69,6 @@ function main() {
 
 function myTimer() {
   main();
-
-  // console.log('ran myTimer')
 }
 
 // save last update in seconds by repository name (both private and public, those are separate API calls)
