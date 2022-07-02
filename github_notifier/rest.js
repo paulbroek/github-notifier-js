@@ -10,22 +10,26 @@ const SlackBot = require("slackbots");
 dotenv.config();
 
 const slack_token = process.env.SLACK_TOKEN;
+const slack_channel = process.env.SLACK_CHANNEL;
+const github_user = process.env.GITHUB_USER;
 const github_auth = process.env.GITHUB_TOKEN;
-const MIN_PREC = 3;
+
+const LINE = "--------------------------------------------";
+const MIN_PREC = 2;
 const config = {
   ALERT_FROM_HOUR: 20,
   RUN_EVERY_HOURS: 5,
+  PER_PAGE: 100,
 };
-
+// per_page: number of items to fetch from github api
 const RUN_EVERY_SECS = 3600 * config.RUN_EVERY_HOURS;
 const hostname = os.hostname();
 
-console.log(`config=${JSON.stringify(config, null, "\t")}`);
-
 // create a Slack bot
+// Add a bot https://my.slack.com/services/new/bot and put the token
 const bot = new SlackBot({
-  token: slack_token, // Add a bot https://my.slack.com/services/new/bot and put the token
-  name: "Trading",
+  token: slack_token,
+  name: slack_channel,
 });
 
 bot.on("start", function () {
@@ -47,8 +51,14 @@ const octokit = new Octokit({
 setInterval(myTimer, RUN_EVERY_SECS * 1000);
 
 function main() {
+  console.log(
+    `\n${LINE}\n-------- running github-notifier-js --------\n${LINE}`
+  );
+  console.log(`config: \n${JSON.stringify(config, null, "\t")}`);
+
   const last_update_ago = [];
   promises = makePromises(last_update_ago);
+
   Promise.all(promises).then(() => {
     sortLogUpdates(last_update_ago);
     const min_updated = updatedForToday(last_update_ago);
@@ -77,7 +87,7 @@ const sortLogUpdates = (last_update_ago, ndisplay = 5) => {
   last_update_ago.sort((a, b) => a.updated_ago - b.updated_ago);
 
   console.log(
-    `last_update_ago: ${JSON.stringify(
+    `last ${ndisplay} updates ago: \n${JSON.stringify(
       last_update_ago.slice(0, ndisplay),
       null,
       "\t"
@@ -88,26 +98,30 @@ const sortLogUpdates = (last_update_ago, ndisplay = 5) => {
   const repoNames = last_update_ago.map((x) => x.name);
   const sortedRepoNames = repoNames.map((name) => name.toLowerCase());
   sortedRepoNames.sort();
-  console.log(`last_update_ago.keys: ${sortedRepoNames}`);
+  // console.log(`last_update_ago.keys: ${sortedRepoNames}`);
 };
 
-const updatedForToday = (last_update_ago) => {
+const updatedForToday = (last_update_ago, ndisplay = 8) => {
   updated_agos = last_update_ago.map((x) => x.updated_ago_hours);
   assert(last_update_ago.length > 0);
-  console.log(`updated_agos: ${JSON.stringify(updated_agos)}`);
+  console.log(
+    `last ${ndisplay} updated_agos: ${JSON.stringify(
+      updated_agos.slice(0, ndisplay)
+    )}`
+  );
   min_updated = Math.min(...updated_agos);
-  const base_msg = `min_updated: ${min_updated.toFixed(MIN_PREC)} `;
+  const min_hours_ago = ` (${min_updated.toFixed(MIN_PREC)} hours ago)`;
   const cond = min_updated < config.ALERT_FROM_HOUR;
   const msg =
-    base_msg +
-    (cond ? "you commited for today" : "you didn't commit for today");
+    (cond ? "you commited for today" : "you didn't commit for today") +
+    min_hours_ago;
   console.log(msg);
-  console.log("--------------------------------------------");
+  console.log(LINE);
 
   return min_updated;
 };
 
-const logRepoNames = function (data, last_update_ago) {
+const logRepoNames = function (data, last_update_ago, visibility) {
   const now = new Date();
 
   // console.log(`some data: ${JSON.stringify(data)}`);
@@ -116,8 +130,9 @@ const logRepoNames = function (data, last_update_ago) {
   // console.log(`data[0].pushed_at: ${data[0].pushed_at}`);
 
   // handle data
-  console.log(`len data: ${data.length}`);
+  console.log(`${visibility} repos: ${data.length}`);
   data.forEach((el) => {
+    // console.log(`el=${JSON.stringify(el)}`);
     // console.log(`el.name=${el.name}`);
     const updated_ago = now - new Date(el.pushed_at);
     last_update_ago.push({
@@ -134,20 +149,21 @@ const makePromises = (last_update_ago) => {
   const promises = [];
   promises[0] = octokit.rest.repos
     .listForAuthenticatedUser({
-      username: "paulbroek",
+      username: github_user,
+      per_page: config.PER_PAGE,
     })
     .then(({ data }) => {
-      logRepoNames(data, last_update_ago);
+      logRepoNames(data, last_update_ago, "private");
     });
 
   promises[1] = octokit.rest.repos
     .listForUser({
-      username: "paulbroek",
+      username: github_user,
+      per_page: config.PER_PAGE,
     })
     .then(({ data }) => {
-      logRepoNames(data, last_update_ago);
+      logRepoNames(data, last_update_ago, "public");
     });
-
   return promises;
 };
 

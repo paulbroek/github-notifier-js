@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
     github-notifier:
@@ -6,16 +6,10 @@ services:
         build: .
         container_name: github-notifier
         command:
-                - /bin/bash
-                - -c
-                - |
-                  cd /mnt_src
-                  node -e 'require("./github_notifier/rest")'
-                  
-        # volumes:
-        #     - ./enabler:/mnt_src
-        #     # - /usr/bin/docker:/usr/bin/docker # making docker client accessible inside docker: mount /usr/bin/docker and /var/run/docker.sock
-        #     # - /var/run/docker.sock:/var/run/docker.sock
+            - /bin/bash
+            - -c
+            - |
+                node -e 'require("./github_notifier/rest")'
 
         # environment:
         #     - PRODUCTION_MODE=1
