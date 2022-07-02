@@ -2,6 +2,8 @@
 
 Notifies user when he/she didn't commit for the day
 
+![Alt text](/docs/img/example.png "Example output")
+
 ## 1. Configuration
 
 ### 1.1 Create `.env` file
