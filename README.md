@@ -2,7 +2,13 @@
 
 Notifies user when he/she didn't commit for the day
 
-![Alt text](/docs/img/example.png "Example output")
+<!-- ![Alt text](/docs/img/example.png "Example output") -->
+
+<img
+  src="/docs/img/example.png"
+  alt="Alt text"
+  title="Example output"
+  style="display: inline-block; margin: 0 auto; max-width: 200px">
 
 ## 1. Configuration
 
